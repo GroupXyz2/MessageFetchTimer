@@ -125,18 +125,22 @@ function handleChannelSelect(data: any) {
 }
 
 function handleMessageLoad(data: any) {
-    if (currentFetch && data.channelId === currentFetch.channelId) {
-        const endTime = performance.now();
-        const duration = endTime - currentFetch.startTime;
-        
-        channelTimings.set(currentFetch.channelId, {
-            time: duration,
-            timestamp: new Date()
-        });
-        
-        currentFetch = null;
-    }
+    if (!currentFetch || data.channelId !== currentFetch.channelId) return;
+
+    const existing = channelTimings.get(currentFetch.channelId);
+    if (existing) return;
+
+    const endTime = performance.now();
+    const duration = endTime - currentFetch.startTime;
+
+    channelTimings.set(currentFetch.channelId, {
+        time: duration,
+        timestamp: new Date()
+    });
+
+    currentFetch = null;
 }
+
 
 export default definePlugin({
     name: "MessageFetchTimer",
