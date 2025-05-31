@@ -85,8 +85,7 @@ const FetchTimeButton: ChatBarButtonFactory = ({ isMainChat }) => {
                 <span style={{
                     fontSize: "12px",
                     color: iconColor,
-                    fontWeight: "500",
-                    fontFamily: "Whitney, 'Helvetica Neue', Helvetica, Arial, sans-serif"
+                    fontWeight: "500"
                 }}>
                     {displayTime}
                 </span>
