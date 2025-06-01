@@ -1,17 +1,14 @@
 /*
-* Vencord, a Discord client mod
-* Copyright (c) 2025 Vendicated and contributors*
-* SPDX-License-Identifier: GPL-3.0-or-later
-*/
+ * Vencord, a Discord client mod
+ * Copyright (c) 2025 Vendicated and contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
 
 import { ChatBarButton, ChatBarButtonFactory } from "@api/ChatButtons";
 import { definePluginSettings } from "@api/Settings";
+import { getCurrentChannel } from "@utils/discord";
 import definePlugin, { OptionType } from "@utils/types";
-import { findByPropsLazy } from "@webpack";
 import { FluxDispatcher, React } from "@webpack/common";
-
-const MessageStore = findByPropsLazy("getMessages", "getMessage");
-const ChannelStore = findByPropsLazy("getChannel", "getDMFromUserId");
 
 interface FetchTiming {
     channelId: string;
@@ -22,8 +19,8 @@ interface FetchTiming {
 }
 
 let currentFetch: FetchTiming | null = null;
-let channelTimings: Map<string, { time: number; timestamp: Date }> = new Map();
 let currentChannelId: string | null = null;
+const channelTimings: Map<string, { time: number; timestamp: Date; }> = new Map();
 
 const settings = definePluginSettings({
     showIcon: {
@@ -45,7 +42,7 @@ const settings = definePluginSettings({
 
 const FetchTimeButton: ChatBarButtonFactory = ({ isMainChat }) => {
     const { showMs, iconColor } = settings.use(["showMs", "iconColor"]);
-    
+
     if (!isMainChat || !settings.store.showIcon || !currentChannelId) {
         return null;
     }
@@ -57,17 +54,17 @@ const FetchTimeButton: ChatBarButtonFactory = ({ isMainChat }) => {
 
     const { time, timestamp } = channelData;
     const displayTime = showMs ? `${Math.round(time)}ms` : `${Math.round(time / 1000)}s`;
-    
+
     if (!showMs && Math.round(time / 1000) === 0) {
         return null;
     }
-    
+
     const timeAgo = formatTimeAgo(timestamp);
-    
+
     return (
         <ChatBarButton
             tooltip={`Messages loaded in ${Math.round(time)}ms (${timeAgo})`}
-            onClick={() => {}}
+            onClick={() => { }}
         >
             <div style={{
                 display: "flex",
@@ -103,13 +100,13 @@ function formatTimeAgo(timestamp: Date): string {
     const days = Math.floor(hours / 24);
 
     if (days > 0) {
-        return `${days} day${days > 1 ? 's' : ''} ago`;
+        return `${days} day${days > 1 ? "s" : ""} ago`;
     } else if (hours > 0) {
-        return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+        return `${hours} hour${hours > 1 ? "s" : ""} ago`;
     } else if (minutes > 0) {
-        return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+        return `${minutes} minute${minutes > 1 ? "s" : ""} ago`;
     } else {
-        return 'just now';
+        return "just now";
     }
 }
 
@@ -152,11 +149,10 @@ export default definePlugin({
 
     start() {
         FluxDispatcher.subscribe("CHANNEL_SELECT", handleChannelSelect);
-        
         FluxDispatcher.subscribe("LOAD_MESSAGES_SUCCESS", handleMessageLoad);
         FluxDispatcher.subscribe("MESSAGE_CREATE", handleMessageLoad);
-        
-        const currentChannel = ChannelStore.getChannel(window.location.pathname.split("/").pop());
+
+        const currentChannel = getCurrentChannel();
         if (currentChannel) {
             currentChannelId = currentChannel.id;
         }
@@ -166,7 +162,7 @@ export default definePlugin({
         FluxDispatcher.unsubscribe("CHANNEL_SELECT", handleChannelSelect);
         FluxDispatcher.unsubscribe("LOAD_MESSAGES_SUCCESS", handleMessageLoad);
         FluxDispatcher.unsubscribe("MESSAGE_CREATE", handleMessageLoad);
-        
+
         currentFetch = null;
         channelTimings.clear();
         currentChannelId = null;
